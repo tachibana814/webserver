@@ -1,0 +1,169 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>My first Vue app</title>
+  <script src="https://unpkg.com/vue"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    .input {
+      width: 200px;
+    }
+
+    .el-table .warning-row {
+      background: oldlace;
+    }
+    .el-table .success-row {
+      background: #f0f9eb;
+    }
+    .footer {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div>
+        Project: <el-input class="input" v-model="project" placeholder="请输入内容"></el-input>
+        Hole Size: <el-input class="input" v-model="holesize" placeholder="请输入内容"></el-input>
+        
+        Survey Type: <el-select v-model="surveyType" placeholder="请选择">
+            <el-option
+              v-for="item in surveyOptions"
+              :key="item"
+              :label="item"
+              :value="item">
+            </el-option>
+          </el-select>
+        BHA Type: <el-select v-model="bhaType" placeholder="请选择">
+            <el-option
+              v-for="item in bhaOptions"
+              :key="item"
+              :label="item"
+              :value="item">
+            </el-option>
+          </el-select>
+        <el-button type="primary" @click="handleSearch">Search</el-button>
+    </div>
+
+    <el-table
+      :data="tableData"
+      :row-class-name="tableRowClassName"
+      style="width: 100%">
+      <el-table-column
+        prop="casefile"
+        label="Casefile Name"
+        width="180">
+      </el-table-column>
+      <el-table-column
+        prop="description"
+        label="Description"
+        width="180">
+      </el-table-column>
+      <el-table-column
+        prop="label"
+        label="Label">
+      </el-table-column>
+      <el-table-column
+        prop="level"
+        label="Level">
+      </el-table-column>
+      <el-table-column
+        prop="date"
+        label="Date">
+      </el-table-column>
+      <el-table-column
+        prop="createdby"
+        label="Created by">
+      </el-table-column>
+      <el-table-column
+        prop="download"
+        label="Download">
+      </el-table-column>
+    </el-table>
+    <div class="footer">
+      <el-pagination
+        layout="prev, pager, next"
+        background
+        :current-page="page"
+        :total="total">
+      </el-pagination>
+    </div>
+  </div>
+
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        project: 'BHAPRO',
+        holesize: '',
+        surveyType: '',
+        bhaType: '',
+        tableData: [],
+        surveyOptions: ['vertical', 'horizontal'],
+        bhaOptions: [
+          'Bit',
+          'Stabilizer',
+          'Motor',
+          'DrillCollar',
+          'Reamer',
+          'HWDP',
+        ],
+        limit: 10,
+        page: 1,
+        total: 0,
+      },
+      computed: {
+        offset() {
+          return (this.page - 1) * this.limit
+        }
+      },
+      watch: {
+        offset() {
+          this.handleSearch()
+        }
+      },
+      created() {
+        this.handleSearch()
+      },
+      methods: {
+        tableRowClassName({row, rowIndex}) {
+          if (rowIndex === 1) {
+            return 'warning-row';
+          } else if (rowIndex === 3) {
+            return 'success-row';
+          }
+          return '';
+        },
+        handleSearch() {
+          const baseUrl = 'http://127.0.0.1'
+          //const url = `${baseUrl}/${this.holesize}/${this.surveyType}/${this.bhaType}?limit=${this.limit}&offset=${this.offset}`
+          const url = '127.0.0.1:5000/6.125/90/Bit/?Limit=5&Offset=0'
+          fetch(url, {
+            cache: 'no-cache',
+          }).then(async res => {
+            const { data, total } = await res.json()
+            this.tableData = data.map(e => {
+              const [casefile, description, date, createdby] = e
+              return {
+                casefile,
+                description,
+                date,
+                createdby,
+                label: '',
+                level: '',
+                download: '',
+              }
+            })
+            this.total = total
+          }).catch(err => {
+            console.log('fetch data error')
+            console.log(err)
+          })
+        }
+      }
+    })
+  </script>
+</body>
+</html>
